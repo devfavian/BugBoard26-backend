@@ -1,0 +1,23 @@
+#############################################
+# Maven
+#############################################
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+
+# Log files
+*.log
+
+#############################################
+# Eclipse / IDE
+#############################################
+.classpath
+.project
+.settings/
+bin/
+
+# Java
+*.class
+*.jar
+
+
