@@ -1,4 +1,4 @@
-package it.unina.bugboard.dto;
+package it.unina.bugboard.model;
 
 public enum Role {
 	USER,
