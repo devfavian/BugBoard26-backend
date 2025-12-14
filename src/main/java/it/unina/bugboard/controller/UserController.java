@@ -14,17 +14,20 @@ import it.unina.bugboard.dto.LoginResponse;
 import it.unina.bugboard.dto.RegisterRequest;
 import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseUserInterface;
+import it.unina.bugboard.security.JwtService;
 import it.unina.bugboard.services.UserServicesInterface;
 
 @RestController
-@RequestMapping("/bugboard/users")
+@RequestMapping("/bugboard")
 public class UserController {
 	DatabaseUserInterface database;
 	UserServicesInterface services;
+	JwtService jwtServices;
 	
-	public UserController(DatabaseUserInterface database, UserServicesInterface services) {
+	public UserController(DatabaseUserInterface database, UserServicesInterface services, JwtService jwtServices) {
 		this.database = database;
 		this.services = services;
+		this.jwtServices = jwtServices;
 	}
 	
 	@PostMapping("/login")
@@ -42,16 +45,13 @@ public class UserController {
 	    }
 
 	    User u = userOpt.get();
+        String token = jwtServices.createToken(u.getId(), u.getRole().name());
+        LoginResponse response = new LoginResponse(u.getId(), u.getRole(), token);
 
-	    LoginResponse response = new LoginResponse(
-	            u.getId(),
-	            u.getRole()
-	    );
-
-	    return ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
 	}
 	
-	@PostMapping("/register")
+	@PostMapping("/admin/register")
 	public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
 		services.register(req);
 		return ResponseEntity.status(HttpStatus.CREATED).build();
