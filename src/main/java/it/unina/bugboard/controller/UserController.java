@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import it.unina.bugboard.dto.LoginRequest;
+import it.unina.bugboard.dto.LoginResponse;
 import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseUserInterface;
 import it.unina.bugboard.services.UserServicesInterface;
@@ -27,21 +28,26 @@ public class UserController {
 	}
 	
 	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-		Optional<User> userOpt = services.login(request.getEmail(), request.getPsw());
-		
-		if(userOpt.isEmpty()) {
-			return ResponseEntity
-					.status(HttpStatus.UNAUTHORIZED)
-					.body("Credenziali non valide");
-		}
-		
-		User u = userOpt.get();
-		
-		return ResponseEntity
-				.ok(Map.of(
-					"userID", u.getId(),
-					"role", u.getRole()
-						));
+	public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
+
+	    Optional<User> userOpt = services.login(
+	            req.getEmail(),
+	            req.getPsw()
+	    );
+
+	    if (userOpt.isEmpty()) {
+	        return ResponseEntity
+	                .status(HttpStatus.UNAUTHORIZED)
+	                .build();
+	    }
+
+	    User u = userOpt.get();
+
+	    LoginResponse response = new LoginResponse(
+	            u.getId(),
+	            u.getRole()
+	    );
+
+	    return ResponseEntity.ok(response);
 	}
 }
