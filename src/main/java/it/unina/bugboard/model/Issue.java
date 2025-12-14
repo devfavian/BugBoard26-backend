@@ -30,8 +30,10 @@ public class Issue {
 	@Column(name = "description", nullable = false)
 	private String description;
 	
-	@Column(name = "priority")
-	private Integer priority;
+	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM)
+	@Column(name = "priority", columnDefinition = "priority_enum")
+	private Priority priority;
 	
 	@Column(name = "path")
 	private String path;
@@ -78,11 +80,11 @@ public class Issue {
 		this.description = description;
 	}
 
-	public Integer getPriority() {
+	public Priority getPriority() {
 		return priority;
 	}
 
-	public void setPriority(Integer priority) {
+	public void setPriority(Priority priority) {
 		this.priority = priority;
 	}
 
