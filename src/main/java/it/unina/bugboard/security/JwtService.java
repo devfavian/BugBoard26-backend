@@ -31,4 +31,24 @@ public class JwtService {
     public DecodedJWT verify(String token) {
         return VERIFIER.verify(token); // se non valido/scaduto -> eccezione
     }
+    
+    public Long extractUserId(String token) {
+        return Long.parseLong(
+            JWT.require(ALGO)
+               .withIssuer(ISSUER)
+               .build()
+               .verify(token)
+               .getSubject()
+        );
+    }
+
+    public String extractRole(String token) {
+        return JWT.require(ALGO)
+                  .withIssuer(ISSUER)
+                  .build()
+                  .verify(token)
+                  .getClaim("role")
+                  .asString(); // "ADMIN" o "USER"
+    }
+
 }

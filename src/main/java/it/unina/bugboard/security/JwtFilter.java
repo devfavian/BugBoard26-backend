@@ -1,6 +1,5 @@
 package it.unina.bugboard.security;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,29 +32,25 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = auth.substring(7);
-
         try {
-            DecodedJWT jwt = jwtService.verify(token);
+            String token = auth.substring(7);
 
-            String userId = jwt.getSubject();
-            String role = jwt.getClaim("role").asString(); // "ADMIN" / "USER"
-
-            var authority = new SimpleGrantedAuthority("ROLE_" + role);
+            Long userId = jwtService.extractUserId(token);
+            String role = jwtService.extractRole(token);
 
             var authentication = new UsernamePasswordAuthenticationToken(
-                    userId,
+                    userId, // principal = ID
                     null,
-                    List.of(authority)
+                    List.of(new SimpleGrantedAuthority("ROLE_" + role)) // ROLE_ADMIN / ROLE_USER
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            filterChain.doFilter(request, response);
-
         } catch (Exception e) {
-            // token non valido/scaduto
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
+
+        filterChain.doFilter(request, response);
     }
 }

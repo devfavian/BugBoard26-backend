@@ -28,4 +28,9 @@ public class DatabaseUserRepository implements DatabaseUserInterface {
 	public boolean emailExist(String email) {
 		return jpa.existsByEmail(email);
 	}
+	
+	@Override
+	public Optional<User> findUserById(Long id) {
+		return jpa.findById(id);
+	}
 }

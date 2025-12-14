@@ -42,4 +42,14 @@ public class UserServices implements UserServicesInterface {
 		
 		return database.saveUser(u);
 	}
+	
+	public Optional<User> findUserById(Long id) {
+		Optional<User> userOpt = database.findUserById(id);
+		
+		if(userOpt.isEmpty()) return Optional.empty();
+		
+		User user = userOpt.get();
+		
+		return Optional.of(user);
+	}
 }

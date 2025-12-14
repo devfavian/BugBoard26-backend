@@ -9,6 +9,7 @@ import it.unina.bugboard.model.User;
 public interface JpaUserRepositoryInterface extends JpaRepository<User,Long> {
 	Optional<User> findByEmail(String email);
 	boolean existsByEmail(String email);
+	Optional<User> findById(Long id);
 	//save
 }
 

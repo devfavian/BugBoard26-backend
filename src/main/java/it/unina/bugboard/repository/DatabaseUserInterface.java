@@ -8,4 +8,5 @@ public interface DatabaseUserInterface {
 	Optional<User> findByEmail(String email);
 	User saveUser(User u);
 	boolean emailExist(String email);
+	Optional<User> findUserById(Long id);
 }

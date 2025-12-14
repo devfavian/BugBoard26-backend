@@ -2,6 +2,7 @@ package it.unina.bugboard.dto;
 
 import it.unina.bugboard.model.Role;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class RegisterRequest {
     @NotBlank
@@ -10,7 +11,7 @@ public class RegisterRequest {
     @NotBlank
     private String psw;
     
-    @NotBlank
+    @NotNull
     private Role role;
 
 	public String getEmail() {

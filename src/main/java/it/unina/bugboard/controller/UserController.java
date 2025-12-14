@@ -16,6 +16,7 @@ import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseUserInterface;
 import it.unina.bugboard.security.JwtService;
 import it.unina.bugboard.services.UserServicesInterface;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/bugboard")
@@ -31,7 +32,7 @@ public class UserController {
 	}
 	
 	@PostMapping("/login")
-	public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
+	public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
 
 	    Optional<User> userOpt = services.login(
 	            req.getEmail(),
@@ -52,7 +53,7 @@ public class UserController {
 	}
 	
 	@PostMapping("/admin/register")
-	public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+	public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
 		services.register(req);
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}

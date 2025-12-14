@@ -14,6 +14,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -55,6 +57,18 @@ public class Issue {
 	@UpdateTimestamp			//alla modifica inserisce la data attuale subito nel DB
 	@Column(name = "updated_at")
 	private LocalDateTime updated_At;
+	
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "id_creator", nullable = false)
+	private User creator;
+
+	public User getCreator() {
+		return creator;
+	}
+
+	public void setCreator(User creator) {
+		this.creator = creator;
+	}
 
 	public Long getId() {
 		return id;
