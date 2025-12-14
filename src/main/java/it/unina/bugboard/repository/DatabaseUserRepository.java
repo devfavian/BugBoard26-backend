@@ -15,7 +15,7 @@ public class DatabaseUserRepository implements DatabaseUserInterface {
 	}
 	
 	@Override
-	public Optional<User> login(User u) {
-		return jpa.findByEmailAndPsw(u.getEmail(), u.getPsw());
+	public Optional<User> login(String email) {
+		return jpa.findByEmail(email);
 	}
 }
