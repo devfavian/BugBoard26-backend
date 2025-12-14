@@ -15,7 +15,17 @@ public class DatabaseUserRepository implements DatabaseUserInterface {
 	}
 	
 	@Override
-	public Optional<User> login(String email) {
+	public Optional<User> findByEmail(String email) {
 		return jpa.findByEmail(email);
+	}
+	
+	@Override
+	public User saveUser(User u) {
+		return jpa.save(u);
+	}
+	
+	@Override
+	public boolean emailExist(String email) {
+		return jpa.existsByEmail(email);
 	}
 }

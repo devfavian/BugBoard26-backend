@@ -1,5 +1,8 @@
 package it.unina.bugboard.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,6 +27,7 @@ public class User {
 	private String psw;
 	
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM)											//quando lo invii ad hibernate, mandalo come enum postegres, non come stringa
 	@Column(name = "role", columnDefinition = "role_enum", nullable = false)	//è di tipo "role_enum" in postegres
 	private Role role;
 
