@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import it.unina.bugboard.dto.IssueResponse;
 import it.unina.bugboard.dto.NewIssueRequest;
 import it.unina.bugboard.model.Issue;
 import it.unina.bugboard.model.User;
@@ -27,6 +28,9 @@ public class IssueServices implements IssueServicesInterface {
 	
 	public Issue createIssue(NewIssueRequest request, User currentUser) {
 		
+		User u = new User();
+		u.setId(currentUser.getId());
+		
 		Issue i = new Issue();
 		i.setTitle(request.getTitle());
 		i.setDescription(request.getDescription());
@@ -35,12 +39,12 @@ public class IssueServices implements IssueServicesInterface {
 		i.setPath(request.getPath());
 		i.setType(request.getType());
 		i.setState(State.TODO);
-		i.setCreator(currentUser);
+		i.setCreator(u);
 		
 		return database.saveIssue(i);
 	}
 	
-	public List<Issue> getAllIssues(String sort) {
+	public List<IssueResponse> getAllIssues(String sort) {
 		
 	    if (sort == null || sort.isBlank()) {
 	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing sort param");
@@ -65,7 +69,20 @@ public class IssueServices implements IssueServicesInterface {
 	            ? Sort.by(field.getProperty()).descending()
 	            : Sort.by(field.getProperty()).ascending();
 
-	    return database.findAll(s);
+	    return database.findAll(s)			//trasformo issue in issue response, così che non debba passare campi sensibili come la password
+	            .stream()
+	            .map(i -> new IssueResponse(
+	                    i.getId(),
+	                    i.getTitle(),
+	                    i.getDescription(),
+	                    i.getPriority(),
+	                    i.getState(),
+	                    i.getType(),
+	                    i.getPath(),
+	                    i.getCreatedAt(),
+	                    i.getUpdatedAt(),
+	                    i.getCreator().getId()
+	            )).toList();
 	}
 
 }

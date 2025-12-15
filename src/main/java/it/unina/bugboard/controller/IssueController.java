@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import it.unina.bugboard.dto.IssueResponse;
 import it.unina.bugboard.dto.NewIssueRequest;
-import it.unina.bugboard.model.Issue;
 import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseIssueInterface;
 import it.unina.bugboard.services.IssueServicesInterface;
@@ -48,13 +48,13 @@ public class IssueController {
 	    }
 
 	    User currentUser = userOpt.get();
-	    Issue issue = issueServices.createIssue(request, currentUser);
+	   issueServices.createIssue(request, currentUser);
 
-	    return ResponseEntity.ok(issue);
+	    return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 	
 	@GetMapping("/view")
-	public List<Issue> getIssuesByParam(@RequestParam String sort){
+	public List<IssueResponse> getIssuesByParam(@RequestParam String sort){
 		return issueServices.getAllIssues(sort);
 	}
 }
