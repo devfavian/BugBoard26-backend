@@ -1,6 +1,11 @@
 package it.unina.bugboard.services;
 
+import java.util.List;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import it.unina.bugboard.dto.NewIssueRequest;
 import it.unina.bugboard.model.Issue;
@@ -8,6 +13,7 @@ import it.unina.bugboard.model.Priority;
 import it.unina.bugboard.model.State;
 import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseIssueInterface;
+import it.unina.bugboard.utils.AllowedField;
 
 @Service
 public class IssueServices implements IssueServicesInterface {
@@ -32,4 +38,25 @@ public class IssueServices implements IssueServicesInterface {
 		
 		return database.saveIssue(i);
 	}
+	
+	public List<Issue> getAllIssues(String sort) {
+
+	    String[] p = sort.split(",");
+	    String rawField = p[0];
+	    String direction = p.length > 1 ? p[1] : "asc";
+
+	    AllowedField field;
+	    try {
+	        field = AllowedField.from(rawField);
+	    } catch (IllegalArgumentException e) {
+	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+	    }
+
+	    Sort s = direction.equalsIgnoreCase("desc")
+	            ? Sort.by(field.getProperty()).descending()
+	            : Sort.by(field.getProperty()).ascending();
+
+	    return database.findAll(s);
+	}
+
 }

@@ -1,21 +1,22 @@
 package it.unina.bugboard.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import it.unina.bugboard.dto.NewIssueRequest;
 import it.unina.bugboard.model.Issue;
 import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseIssueInterface;
-import it.unina.bugboard.security.JwtService;
 import it.unina.bugboard.services.IssueServicesInterface;
 import it.unina.bugboard.services.UserServicesInterface;
 import jakarta.validation.Valid;
@@ -50,5 +51,10 @@ public class IssueController {
 	    Issue issue = issueServices.createIssue(request, currentUser);
 
 	    return ResponseEntity.ok(issue);
+	}
+	
+	@GetMapping("/view")
+	public List<Issue> getSessionByDateAsc(@RequestParam String sort){
+		return issueServices.getAllIssues(sort);
 	}
 }

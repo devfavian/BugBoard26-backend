@@ -52,11 +52,11 @@ public class Issue {
 	
 	@CreationTimestamp			//alla creazione inserisce la data attuale subito nel DB
 	@Column(name = "created_at", updatable = false)
-	private LocalDateTime created_At;
+	private LocalDateTime createdAt;
 	
 	@UpdateTimestamp			//alla modifica inserisce la data attuale subito nel DB
 	@Column(name = "updated_at")
-	private LocalDateTime updated_At;
+	private LocalDateTime updatedAt;
 	
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "id_creator", nullable = false)
