@@ -54,7 +54,7 @@ public class IssueController {
 	}
 	
 	@GetMapping("/view")
-	public List<Issue> getSessionByDateAsc(@RequestParam String sort){
+	public List<Issue> getIssuesByParam(@RequestParam String sort){
 		return issueServices.getAllIssues(sort);
 	}
 }

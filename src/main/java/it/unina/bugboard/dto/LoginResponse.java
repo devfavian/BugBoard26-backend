@@ -1,6 +1,6 @@
 package it.unina.bugboard.dto;
 
-import it.unina.bugboard.model.Role;
+import it.unina.bugboard.utils.Role;
 
 public class LoginResponse {
 

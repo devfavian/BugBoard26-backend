@@ -1,4 +1,4 @@
-package it.unina.bugboard.model;
+package it.unina.bugboard.utils;
 
 public enum Priority {
 	HIGH,

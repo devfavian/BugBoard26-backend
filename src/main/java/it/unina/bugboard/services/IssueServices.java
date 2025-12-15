@@ -9,11 +9,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import it.unina.bugboard.dto.NewIssueRequest;
 import it.unina.bugboard.model.Issue;
-import it.unina.bugboard.model.Priority;
-import it.unina.bugboard.model.State;
 import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseIssueInterface;
 import it.unina.bugboard.utils.AllowedField;
+import it.unina.bugboard.utils.Priority;
+import it.unina.bugboard.utils.State;
+import it.unina.bugboard.utils.StringManager;
 
 @Service
 public class IssueServices implements IssueServicesInterface {
@@ -41,9 +42,11 @@ public class IssueServices implements IssueServicesInterface {
 	
 	public List<Issue> getAllIssues(String sort) {
 
-	    String[] p = sort.split(",");
-	    String rawField = p[0];
-	    String direction = p.length > 1 ? p[1] : "asc";
+	    String rawField = StringManager.getElement(sort, 0);
+	    String direction;
+	    
+	    if(StringManager.getFields(sort) .length < 1) direction = "asc";		//controllo che mi sia passato il campo dell'ordinamento
+	    else direction = StringManager.getElement(sort, 1);
 
 	    AllowedField field;
 	    try {

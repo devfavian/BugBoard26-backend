@@ -7,6 +7,9 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
+import it.unina.bugboard.utils.Priority;
+import it.unina.bugboard.utils.State;
+import it.unina.bugboard.utils.Type;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

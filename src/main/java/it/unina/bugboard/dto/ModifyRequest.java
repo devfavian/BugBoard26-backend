@@ -5,8 +5,7 @@ import it.unina.bugboard.utils.Type;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class NewIssueRequest {
-	
+public class ModifyRequest {
 	@NotBlank
 	private String title;
 
@@ -59,5 +58,4 @@ public class NewIssueRequest {
 	public void setType(Type type) {
 		this.type = type;
 	}
-	
 }
