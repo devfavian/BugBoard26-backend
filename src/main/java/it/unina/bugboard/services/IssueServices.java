@@ -41,12 +41,18 @@ public class IssueServices implements IssueServicesInterface {
 	}
 	
 	public List<Issue> getAllIssues(String sort) {
+		
+	    if (sort == null || sort.isBlank()) {
+	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing sort param");
+	    }
 
 	    String rawField = StringManager.getElement(sort, 0);
 	    String direction;
 	    
-	    if(StringManager.getFields(sort) .length < 1) direction = "asc";		//controllo che mi sia passato il campo dell'ordinamento
+	    if(StringManager.getFields(sort).length <= 1) direction = "asc";		//controllo che mi sia passato il campo dell'ordinamento
 	    else direction = StringManager.getElement(sort, 1);
+	    
+	    if (direction == null || direction.isBlank()) direction = "asc";		//nel caso in cui fosse "", non sarebbe null, ma creerebbe problemi
 
 	    AllowedField field;
 	    try {
