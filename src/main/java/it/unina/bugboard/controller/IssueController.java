@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import it.unina.bugboard.dto.IssueResponse;
 import it.unina.bugboard.dto.ModifyRequest;
 import it.unina.bugboard.dto.NewIssueRequest;
-import it.unina.bugboard.model.Issue;
 import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseIssueInterface;
 import it.unina.bugboard.services.IssueServicesInterface;
@@ -43,7 +42,7 @@ public class IssueController {
 	}
 	
 	@PostMapping("/new")
-	public ResponseEntity<?> newIssue(@Valid @RequestBody NewIssueRequest request) {
+	public ResponseEntity<Void> newIssue(@Valid @RequestBody NewIssueRequest request) {
 
 	    Long userId = (Long) SecurityContextHolder.getContext()
 	            .getAuthentication()
@@ -66,15 +65,15 @@ public class IssueController {
 	}
 	
 	@PutMapping("/modify/{id}")
-	public ResponseEntity<?> modifyIssue(@PathVariable Long id, @RequestBody ModifyRequest request) {
+	public ResponseEntity<Void> modifyIssue(@PathVariable Long id, @RequestBody ModifyRequest request) {
 		issueServices.modifyIssue(id, request);
-	    return ResponseEntity.ok(null);
+	    return ResponseEntity.ok().build();
 	}
 	
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadImage(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
+    public ResponseEntity<Void> uploadImage(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
         issueServices.uploadIssueImage(id, file);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok().build();
     }
 
 }

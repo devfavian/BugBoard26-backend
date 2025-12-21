@@ -3,8 +3,6 @@ package it.unina.bugboard.dto;
 import it.unina.bugboard.utils.Priority;
 import it.unina.bugboard.utils.State;
 import it.unina.bugboard.utils.Type;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public class ModifyRequest {
 	

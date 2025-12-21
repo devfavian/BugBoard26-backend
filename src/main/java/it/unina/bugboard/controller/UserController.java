@@ -32,11 +32,11 @@ public class UserController {
 	}
 	
 	@PostMapping("/login")
-	public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
+	public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 
 	    Optional<User> userOpt = services.login(
-	            req.getEmail(),
-	            req.getPsw()
+	            request.getEmail(),
+	            request.getPsw()
 	    );
 
 	    if (userOpt.isEmpty()) {
@@ -53,8 +53,8 @@ public class UserController {
 	}
 	
 	@PostMapping("/admin/register")
-	public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
-		services.register(req);
+	public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
+		services.register(request);
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 

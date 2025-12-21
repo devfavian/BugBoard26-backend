@@ -9,12 +9,14 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import it.unina.bugboard.dto.IssueResponse;
 import it.unina.bugboard.dto.ModifyRequest;
@@ -32,10 +34,13 @@ import jakarta.persistence.EntityNotFoundException;
 public class IssueServices implements IssueServicesInterface {
 	
 	private final DatabaseIssueInterface database;
-	private final Path uploadRoot = Paths.get("uploads", "issues");
+    private final Path uploadRoot;
+    private final String publicBase;
 	
-	public IssueServices(DatabaseIssueInterface database) {
+	public IssueServices(DatabaseIssueInterface database, @Value("${app.upload.root}") String uploadRoot, @Value("${app.upload.public-base:/images/issues}") String publicBase) {
 		this.database = database;
+		this.uploadRoot = Paths.get(uploadRoot);
+		this.publicBase = publicBase;
 	}
 	
 	public Issue createIssue(NewIssueRequest request, User currentUser) {
@@ -124,25 +129,30 @@ public class IssueServices implements IssueServicesInterface {
         }
 
         try {
-            // 1) crea directory uploads/issues/{id}
-            Path issueDir = uploadRoot.resolve(String.valueOf(id));
-            Files.createDirectories(issueDir);
+        	// 1) crea directory uploads/issues/{id}
+        	Path issueDir = uploadRoot.resolve(String.valueOf(id));
+        	Files.createDirectories(issueDir);
 
-            // 2) cancella vecchio file se esiste (1 immagine per issue)
-            deleteOldImageIfPresent(issue);
+        	// 2) cancella vecchio file se esiste (1 immagine per issue)
+        	deleteOldImageIfPresent(issue);
 
-            // 3) salva nuovo file
-            String ext = guessExtension(contentType);
-            String filename = UUID.randomUUID() + ext;
-            Path destination = issueDir.resolve(filename).normalize();
+        	// 3) salva nuovo file
+        	String ext = guessExtension(contentType);
+        	String filename = UUID.randomUUID() + ext;
+        	Path destination = issueDir.resolve(filename).normalize();
 
-            try (InputStream in = file.getInputStream()) {
-                Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
-            }
+        	try (InputStream in = file.getInputStream()) {
+        	    Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
+        	}
 
-            // 4) salva path "pubblico" nel DB (URL relativo)
-            String publicPath = "/images/issues/" + id + "/" + filename;
-            issue.setPath(publicPath);
+        	// 4) salva path "pubblico" nel DB (URL relativo)
+        	String publicPath = UriComponentsBuilder
+        	        .fromPath(publicBase)
+        	        .pathSegment(String.valueOf(id))
+        	        .pathSegment(filename)
+        	        .toUriString();
+
+        	issue.setPath(publicPath);
 
             return database.saveIssue(issue);
 
@@ -151,20 +161,25 @@ public class IssueServices implements IssueServicesInterface {
         }
     }
 	
-    private void deleteOldImageIfPresent(Issue issue) throws IOException {
-        String oldPath = issue.getPath();
-        if (oldPath == null || oldPath.isBlank()) return;
+	private void deleteOldImageIfPresent(Issue issue) throws IOException {
+	    String oldPath = issue.getPath();
+	    if (oldPath == null || oldPath.isBlank()) return;
 
-        // se nel DB salvi "/images/issues/{id}/{file}"
-        if (!oldPath.startsWith("/images/")) return;
+	    // se nel DB salvi "/images/issues/{id}/{file}"
+	    String prefix = UriComponentsBuilder
+	            .fromPath(publicBase)
+	            .path("/")
+	            .toUriString();
 
-        // trasforma URL relativo in path su disco:
-        // /images/issues/3/x.jpg -> uploads/issues/3/x.jpg
-        String relative = oldPath.substring("/images/".length());
-        Path oldFile = Paths.get("uploads").resolve(relative).normalize();
+	    if (!oldPath.startsWith(prefix)) return;
 
-        Files.deleteIfExists(oldFile);
-    }
+	    // trasforma URL relativo in path su disco:
+	    // /images/issues/3/x.jpg -> uploads/issues/3/x.jpg
+	    String relative = oldPath.substring(prefix.length());
+	    Path oldFile = uploadRoot.resolve(relative).normalize();
+
+	    Files.deleteIfExists(oldFile);
+	}
     
     private static String guessExtension(String contentType) {
         return switch (contentType) {
