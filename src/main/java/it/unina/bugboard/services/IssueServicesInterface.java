@@ -2,6 +2,8 @@ package it.unina.bugboard.services;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import it.unina.bugboard.dto.IssueResponse;
 import it.unina.bugboard.dto.ModifyRequest;
 import it.unina.bugboard.dto.NewIssueRequest;
@@ -12,4 +14,5 @@ public interface IssueServicesInterface {
 	Issue createIssue(NewIssueRequest request, User currentUser);
 	List<IssueResponse> getAllIssues(String sort);
 	Issue modifyIssue(Long id, ModifyRequest request);
+	Issue uploadIssueImage(Long id, MultipartFile file);
 }

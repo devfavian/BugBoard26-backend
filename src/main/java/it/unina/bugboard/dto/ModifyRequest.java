@@ -10,8 +10,7 @@ public class ModifyRequest {
 	
 	private String title;
 	private String description;
-	private Priority priority;	
-	private String path;	
+	private Priority priority;		
 	private Type type;	
 	private State state;
 
@@ -45,14 +44,6 @@ public class ModifyRequest {
 
 	public void setPriority(Priority priority) {
 		this.priority = priority;
-	}
-
-	public String getPath() {
-		return path;
-	}
-
-	public void setPath(String path) {
-		this.path = path;
 	}
 
 	public Type getType() {

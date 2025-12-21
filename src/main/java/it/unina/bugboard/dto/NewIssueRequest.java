@@ -15,8 +15,6 @@ public class NewIssueRequest {
 	
 	private Priority priority;
 	
-	private String path;
-	
 	@NotNull
 	private Type type;
 
@@ -42,14 +40,6 @@ public class NewIssueRequest {
 
 	public void setPriority(Priority priority) {
 		this.priority = priority;
-	}
-
-	public String getPath() {
-		return path;
-	}
-
-	public void setPath(String path) {
-		this.path = path;
 	}
 
 	public Type getType() {

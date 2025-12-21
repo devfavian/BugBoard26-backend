@@ -1,10 +1,19 @@
 package it.unina.bugboard.services;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import it.unina.bugboard.dto.IssueResponse;
@@ -23,6 +32,7 @@ import jakarta.persistence.EntityNotFoundException;
 public class IssueServices implements IssueServicesInterface {
 	
 	private final DatabaseIssueInterface database;
+	private final Path uploadRoot = Paths.get("uploads", "issues");
 	
 	public IssueServices(DatabaseIssueInterface database) {
 		this.database = database;
@@ -38,7 +48,6 @@ public class IssueServices implements IssueServicesInterface {
 		i.setDescription(request.getDescription());
 		if(request.getPriority() == null)	i.setPriority(Priority.MEDIUM);
 		else i.setPriority(request.getPriority());
-		i.setPath(request.getPath());
 		i.setType(request.getType());
 		i.setState(State.TODO);
 		i.setCreator(u);
@@ -94,11 +103,76 @@ public class IssueServices implements IssueServicesInterface {
 		issue.setTitle(request.getTitle());
 		issue.setDescription(request.getDescription());
 		issue.setPriority(request.getPriority());
-		issue.setPath(request.getPath());
 		issue.setType(request.getType());
 		issue.setState(request.getState());
 		
 		return database.saveIssue(issue);
 	}
+	
+	@Transactional
+	public Issue uploadIssueImage(Long id, MultipartFile file) {
+        Issue issue = database.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Issue con id " + id + " non trovata"));
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File vuoto");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Carica un file immagine");
+        }
+
+        try {
+            // 1) crea directory uploads/issues/{id}
+            Path issueDir = uploadRoot.resolve(String.valueOf(id));
+            Files.createDirectories(issueDir);
+
+            // 2) cancella vecchio file se esiste (1 immagine per issue)
+            deleteOldImageIfPresent(issue);
+
+            // 3) salva nuovo file
+            String ext = guessExtension(contentType);
+            String filename = UUID.randomUUID() + ext;
+            Path destination = issueDir.resolve(filename).normalize();
+
+            try (InputStream in = file.getInputStream()) {
+                Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // 4) salva path "pubblico" nel DB (URL relativo)
+            String publicPath = "/images/issues/" + id + "/" + filename;
+            issue.setPath(publicPath);
+
+            return database.saveIssue(issue);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Errore salvataggio immagine", e);
+        }
+    }
+	
+    private void deleteOldImageIfPresent(Issue issue) throws IOException {
+        String oldPath = issue.getPath();
+        if (oldPath == null || oldPath.isBlank()) return;
+
+        // se nel DB salvi "/images/issues/{id}/{file}"
+        if (!oldPath.startsWith("/images/")) return;
+
+        // trasforma URL relativo in path su disco:
+        // /images/issues/3/x.jpg -> uploads/issues/3/x.jpg
+        String relative = oldPath.substring("/images/".length());
+        Path oldFile = Paths.get("uploads").resolve(relative).normalize();
+
+        Files.deleteIfExists(oldFile);
+    }
+    
+    private static String guessExtension(String contentType) {
+        return switch (contentType) {
+            case "image/png" -> ".png";
+            case "image/jpeg" -> ".jpg";
+            case "image/webp" -> ".webp";
+            default -> throw new IllegalArgumentException("Not supported");
+        };
+    }
 
 }
