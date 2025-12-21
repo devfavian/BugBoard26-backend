@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import it.unina.bugboard.dto.IssueResponse;
 import it.unina.bugboard.dto.ModifyRequest;
 import it.unina.bugboard.dto.NewIssueRequest;
+import it.unina.bugboard.model.Issue;
 import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseIssueInterface;
 import it.unina.bugboard.services.IssueServicesInterface;
@@ -30,20 +31,17 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/bugboard/issue")
 public class IssueController {
-
-	DatabaseIssueInterface database;
 	IssueServicesInterface issueServices;
 	UserServicesInterface userServices;
 		
-	public IssueController(DatabaseIssueInterface database, IssueServicesInterface issueServices, UserServicesInterface userServices) {
-		this.database = database;
+	public IssueController(IssueServicesInterface issueServices, UserServicesInterface userServices) {
 		this.issueServices = issueServices;
 		this.userServices = userServices;
 	}
 	
 	@PostMapping("/new")
-	public ResponseEntity<Void> newIssue(@Valid @RequestBody NewIssueRequest request) {
-
+	public ResponseEntity<IssueResponse> newIssue(@Valid @RequestBody NewIssueRequest request) {
+		
 	    Long userId = (Long) SecurityContextHolder.getContext()
 	            .getAuthentication()
 	            .getPrincipal();
@@ -54,9 +52,10 @@ public class IssueController {
 	    }
 
 	    User currentUser = userOpt.get();
-	   issueServices.createIssue(request, currentUser);
+	    Issue created = issueServices.createIssue(request, currentUser);
+	    IssueResponse response = new IssueResponse(created.getId());
 
-	    return ResponseEntity.status(HttpStatus.CREATED).build();
+	    return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 	
 	@GetMapping("/view")
@@ -71,9 +70,10 @@ public class IssueController {
 	}
 	
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> uploadImage(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
-        issueServices.uploadIssueImage(id, file);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<IssueResponse> uploadImage(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
+        Issue uploaded = issueServices.uploadIssueImage(id, file);
+        IssueResponse response = new IssueResponse(uploaded.getId(), uploaded.getPath());
+        return ResponseEntity.ok().body(response);
     }
 
 }

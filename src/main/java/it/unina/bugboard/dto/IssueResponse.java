@@ -31,6 +31,15 @@ public class IssueResponse {
         this.updatedAt = updatedAt;
         this.creatorId = creatorId;
     }
+    
+    public IssueResponse(Long id) {
+    	this.id = id;
+    }
+    
+    public IssueResponse(Long id, String path) {
+    	this.id = id;
+    	this.path = path;
+    }
 
     // --- getters only (l'api non può fare set) ---
     public Long getId() { return id; }

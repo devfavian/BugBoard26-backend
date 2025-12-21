@@ -117,15 +117,15 @@ public class IssueServices implements IssueServicesInterface {
 	@Transactional
 	public Issue uploadIssueImage(Long id, MultipartFile file) {
         Issue issue = database.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Issue con id " + id + " non trovata"));
+                .orElseThrow(() -> new EntityNotFoundException("Issue " + id + " not found"));
 
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File vuoto");
+            throw new IllegalArgumentException("Empty file");
         }
 
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("Carica un file immagine");
+            throw new IllegalArgumentException("Upload an image file");
         }
 
         try {
@@ -157,7 +157,7 @@ public class IssueServices implements IssueServicesInterface {
             return database.saveIssue(issue);
 
         } catch (IOException e) {
-            throw new RuntimeException("Errore salvataggio immagine", e);
+            throw new RuntimeException("Error during image saving", e);
         }
     }
 	

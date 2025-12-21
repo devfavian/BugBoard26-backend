@@ -21,12 +21,10 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/bugboard")
 public class UserController {
-	DatabaseUserInterface database;
 	UserServicesInterface services;
 	JwtService jwtServices;
 	
-	public UserController(DatabaseUserInterface database, UserServicesInterface services, JwtService jwtServices) {
-		this.database = database;
+	public UserController(UserServicesInterface services, JwtService jwtServices) {
 		this.services = services;
 		this.jwtServices = jwtServices;
 	}
