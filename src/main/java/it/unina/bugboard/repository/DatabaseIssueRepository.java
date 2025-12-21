@@ -1,6 +1,7 @@
 package it.unina.bugboard.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
@@ -22,5 +23,9 @@ public class DatabaseIssueRepository implements DatabaseIssueInterface {
 	
 	public List<Issue> findAll(Sort sort){
 		return jpa.findAll(sort);
+	}
+	
+	public Optional<Issue> findById(Long id){
+		return jpa.findById(id);
 	}
 }

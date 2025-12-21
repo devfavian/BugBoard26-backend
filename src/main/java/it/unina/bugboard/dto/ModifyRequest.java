@@ -1,23 +1,27 @@
 package it.unina.bugboard.dto;
 
 import it.unina.bugboard.utils.Priority;
+import it.unina.bugboard.utils.State;
 import it.unina.bugboard.utils.Type;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class ModifyRequest {
-	@NotBlank
+	
 	private String title;
-
-	@NotBlank
 	private String description;
-	
-	private Priority priority;
-	
-	private String path;
-	
-	@NotNull
-	private Type type;
+	private Priority priority;	
+	private String path;	
+	private Type type;	
+	private State state;
+
+	public State getState() {
+		return state;
+	}
+
+	public void setState(State state) {
+		this.state = state;
+	}
 
 	public String getTitle() {
 		return title;

@@ -7,14 +7,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import it.unina.bugboard.dto.IssueResponse;
+import it.unina.bugboard.dto.ModifyRequest;
 import it.unina.bugboard.dto.NewIssueRequest;
+import it.unina.bugboard.model.Issue;
 import it.unina.bugboard.model.User;
 import it.unina.bugboard.repository.DatabaseIssueInterface;
 import it.unina.bugboard.services.IssueServicesInterface;
@@ -57,4 +61,10 @@ public class IssueController {
 	public List<IssueResponse> getIssuesByParam(@RequestParam String sort){
 		return issueServices.getAllIssues(sort);
 	}
+	
+	@PutMapping("/modify/{id}")
+	public ResponseEntity<?> modifyIssue(@PathVariable Long id, @RequestBody ModifyRequest request) {
+	    return ResponseEntity.status(HttpStatus.CREATED).build();
+	}
+
 }

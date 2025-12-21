@@ -7,4 +7,5 @@ import it.unina.bugboard.model.Issue;
 public interface JpaIssueRepositoryInterface extends JpaRepository<Issue,Long> {
 	//save
 	//findAll
+	//findById
 }

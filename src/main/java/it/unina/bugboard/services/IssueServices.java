@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import it.unina.bugboard.dto.IssueResponse;
+import it.unina.bugboard.dto.ModifyRequest;
 import it.unina.bugboard.dto.NewIssueRequest;
 import it.unina.bugboard.model.Issue;
 import it.unina.bugboard.model.User;
@@ -16,6 +17,7 @@ import it.unina.bugboard.utils.AllowedField;
 import it.unina.bugboard.utils.Priority;
 import it.unina.bugboard.utils.State;
 import it.unina.bugboard.utils.StringManager;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class IssueServices implements IssueServicesInterface {
@@ -83,6 +85,20 @@ public class IssueServices implements IssueServicesInterface {
 	                    i.getUpdatedAt(),
 	                    i.getCreator().getId()
 	            )).toList();
+	}
+	
+	public Issue modifyIssue(Long id, ModifyRequest request) {
+		Issue issue = database.findById(id).orElseThrow(
+				()-> new EntityNotFoundException("Issue not found"));
+		
+		issue.setTitle(request.getTitle());
+		issue.setDescription(request.getDescription());
+		issue.setPriority(request.getPriority());
+		issue.setPath(request.getPath());
+		issue.setType(request.getType());
+		issue.setState(request.getState());
+		
+		return database.saveIssue(issue);
 	}
 
 }
