@@ -20,7 +20,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/bugboard/login").permitAll()
                 .requestMatchers("/bugboard/admin/**").hasRole("ADMIN")
-                .requestMatchers("/bugboard/user/**").hasRole("USER")
+                .requestMatchers("/bugboard/user/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/bugboard/issue/**").hasAnyRole("USER","ADMIN")
                 .anyRequest().authenticated()
         );

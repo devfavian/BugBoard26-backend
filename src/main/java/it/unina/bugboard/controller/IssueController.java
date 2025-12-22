@@ -23,7 +23,6 @@ import it.unina.bugboard.dto.ModifyRequest;
 import it.unina.bugboard.dto.NewIssueRequest;
 import it.unina.bugboard.model.Issue;
 import it.unina.bugboard.model.User;
-import it.unina.bugboard.repository.DatabaseIssueInterface;
 import it.unina.bugboard.services.IssueServicesInterface;
 import it.unina.bugboard.services.UserServicesInterface;
 import jakarta.validation.Valid;

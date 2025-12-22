@@ -13,7 +13,6 @@ import it.unina.bugboard.dto.LoginRequest;
 import it.unina.bugboard.dto.LoginResponse;
 import it.unina.bugboard.dto.RegisterRequest;
 import it.unina.bugboard.model.User;
-import it.unina.bugboard.repository.DatabaseUserInterface;
 import it.unina.bugboard.security.JwtService;
 import it.unina.bugboard.services.UserServicesInterface;
 import jakarta.validation.Valid;
