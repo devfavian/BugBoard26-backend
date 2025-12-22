@@ -10,8 +10,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -189,5 +194,45 @@ public class IssueServices implements IssueServicesInterface {
             default -> throw new IllegalArgumentException("Not supported");
         };
     }
+    
+    public ResponseEntity<Resource> getIssueImage(Long id) {
+
+        Issue issue = database.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Issue not found"));
+
+        if (issue.getPath() == null || issue.getPath().isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "No image for this issue");
+        }
+
+        try {
+            String relative = issue.getPath().replace("/images/issues/", "");
+
+            Path file = uploadRoot.resolve(relative).normalize();
+
+            if (!Files.exists(file)) {
+                throw new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Image file not found");
+            }
+
+            Resource resource = new UrlResource(file.toUri());
+
+            String contentType = Files.probeContentType(file);
+            MediaType mediaType = (contentType != null)
+                    ? MediaType.parseMediaType(contentType)
+                    : MediaType.APPLICATION_OCTET_STREAM;
+
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(resource);
+
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Cannot load image", e);
+        }
+    }
+
 
 }

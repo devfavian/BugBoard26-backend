@@ -3,6 +3,7 @@ package it.unina.bugboard.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -74,5 +75,12 @@ public class IssueController {
         IssueResponse response = new IssueResponse(uploaded.getId(), uploaded.getPath());
         return ResponseEntity.ok().body(response);
     }
+    
+    @GetMapping("/{id}/image")
+    public ResponseEntity<Resource> getIssueImage(@PathVariable Long id) {
+        return issueServices.getIssueImage(id);
+    }
+
+
 
 }
