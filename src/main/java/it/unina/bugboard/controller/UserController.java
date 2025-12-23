@@ -1,13 +1,12 @@
 package it.unina.bugboard.controller;
 
-import java.util.Optional;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import it.unina.bugboard.dto.LoginRequest;
 import it.unina.bugboard.dto.LoginResponse;
@@ -31,18 +30,9 @@ public class UserController {
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 
-	    Optional<User> userOpt = services.login(
-	            request.getEmail(),
-	            request.getPsw()
-	    );
+		User u = services.login(request.getEmail(), request.getPsw())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
-	    if (userOpt.isEmpty()) {
-	        return ResponseEntity
-	                .status(HttpStatus.UNAUTHORIZED)
-	                .build();
-	    }
-
-	    User u = userOpt.get();
         String token = jwtServices.createToken(u.getId(), u.getRole().name());
         LoginResponse response = new LoginResponse(u.getId(), u.getRole(), token);
 

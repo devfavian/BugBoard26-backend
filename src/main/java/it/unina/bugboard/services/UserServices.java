@@ -2,10 +2,8 @@ package it.unina.bugboard.services;
 
 import java.util.Optional;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import it.unina.bugboard.dto.RegisterRequest;
 import it.unina.bugboard.model.User;
@@ -22,19 +20,16 @@ public class UserServices implements UserServicesInterface {
         this.passwordEncoder = passwordEncoder;
     }
 	
-	public Optional<User> login(String email, String rawPsw) {
-		Optional<User> userOpt = database.findByEmail(email);
-		
-		if(userOpt.isEmpty()) return Optional.empty();
-		
-		User user = userOpt.get();
-		if(!passwordEncoder.matches(rawPsw, user.getPsw()))	return Optional.empty();
-		
-		return Optional.of(user);
-	}
+    public Optional<User> login(String email, String rawPsw) {
+        if (email == null || rawPsw == null) return Optional.empty();
+
+        return database.findByEmail(email).filter(u -> passwordEncoder.matches(rawPsw, u.getPsw()));	//filter tiene il valore solo se la condizione è vera
+        																								//in questo caso se è empty ritorna Optional.empty()
+    }
 	
 	public User register(RegisterRequest request) {
-		if(database.emailExist(request.getEmail())) throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered!");
+		if(database.emailExist(request.getEmail())) throw new IllegalArgumentException("Email is already registered");
+		
 		User u = new User();
 		u.setEmail(request.getEmail());
 		u.setPsw(passwordEncoder.encode(request.getPsw()));
@@ -44,12 +39,6 @@ public class UserServices implements UserServicesInterface {
 	}
 	
 	public Optional<User> findUserById(Long id) {
-		Optional<User> userOpt = database.findUserById(id);
-		
-		if(userOpt.isEmpty()) return Optional.empty();
-		
-		User user = userOpt.get();
-		
-		return Optional.of(user);
+		return database.findUserById(id);
 	}
 }

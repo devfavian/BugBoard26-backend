@@ -3,7 +3,6 @@ package it.unina.bugboard.services;
 import java.util.List;
 
 import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import it.unina.bugboard.dto.IssueResponse;
