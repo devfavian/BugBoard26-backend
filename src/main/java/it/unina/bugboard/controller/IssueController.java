@@ -1,9 +1,11 @@
 package it.unina.bugboard.controller;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import it.unina.bugboard.dto.IssueResponse;
 import it.unina.bugboard.dto.ModifyRequest;
@@ -46,25 +49,21 @@ public class IssueController {
 	            .getAuthentication()
 	            .getPrincipal();
 
-	    Optional<User> userOpt = userServices.findUserById(userId);
-	    if (userOpt.isEmpty()) {
-	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-	    }
-
-	    User currentUser = userOpt.get();
+	    User currentUser = userServices.findUserById(userId)
+	            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+	    
 	    Issue created = issueServices.createIssue(request, currentUser);
-	    IssueResponse response = new IssueResponse(created.getId());
-
-	    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	    
+	    return ResponseEntity.status(HttpStatus.CREATED).body(new IssueResponse(created.getId()));
 	}
 	
 	@GetMapping("/view")
-	public List<IssueResponse> getIssuesByParam(@RequestParam String sort){
-		return issueServices.getAllIssues(sort);
+	public List<IssueResponse> getIssuesByParam(@RequestParam(defaultValue = "createdAt,desc") String sort) {
+	    return issueServices.getAllIssues(sort);
 	}
 	
 	@PutMapping("/modify/{id}")
-	public ResponseEntity<Void> modifyIssue(@PathVariable Long id, @RequestBody ModifyRequest request) {
+	public ResponseEntity<Void> modifyIssue(@PathVariable Long id, @Valid @RequestBody ModifyRequest request) {
 		issueServices.modifyIssue(id, request);
 	    return ResponseEntity.ok().build();
 	}
@@ -77,10 +76,14 @@ public class IssueController {
     }
     
     @GetMapping("/{id}/image")
-    public ResponseEntity<Resource> getIssueImage(@PathVariable Long id) {
-        return issueServices.getIssueImage(id);
+    public ResponseEntity<Resource> getIssueImage(@PathVariable Long id) throws IOException {
+        Resource resource = issueServices.getIssueImage(id);
+
+        String contentType = Files.probeContentType(resource.getFile().toPath());
+        MediaType mediaType = (contentType != null)
+                ? MediaType.parseMediaType(contentType)
+                : MediaType.APPLICATION_OCTET_STREAM;
+
+        return ResponseEntity.ok().contentType(mediaType).header(HttpHeaders.CACHE_CONTROL, "no-store").body(resource);
     }
-
-
-
 }

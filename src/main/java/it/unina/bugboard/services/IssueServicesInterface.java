@@ -17,5 +17,5 @@ public interface IssueServicesInterface {
 	List<IssueResponse> getAllIssues(String sort);
 	Issue modifyIssue(Long id, ModifyRequest request);
 	Issue uploadIssueImage(Long id, MultipartFile file);
-	ResponseEntity<Resource> getIssueImage(Long id);
+	Resource getIssueImage(Long id);
 }

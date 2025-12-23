@@ -49,139 +49,161 @@ public class IssueServices implements IssueServicesInterface {
 	}
 	
 	public Issue createIssue(NewIssueRequest request, User currentUser) {
-		
-		User u = new User();
-		u.setId(currentUser.getId());
-		
-		Issue i = new Issue();
-		i.setTitle(request.getTitle());
-		i.setDescription(request.getDescription());
-		if(request.getPriority() == null)	i.setPriority(Priority.MEDIUM);
-		else i.setPriority(request.getPriority());
-		i.setType(request.getType());
-		i.setState(State.TODO);
-		i.setCreator(u);
-		
-		return database.saveIssue(i);
+		return database.saveIssue(toIssue(request, currentUser));
 	}
 	
 	public List<IssueResponse> getAllIssues(String sort) {
-		
-	    if (sort == null || sort.isBlank()) {
-	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing sort param");
-	    }
+	    String[] parts = StringManager.getFields(sort);   // es: ["createdAt","desc"]
+	    String rawField = parts[0];
 
-	    String rawField = StringManager.getElement(sort, 0);
-	    String direction;
-	    
-	    if(StringManager.getFields(sort).length <= 1) direction = "asc";		//controllo che mi sia passato il campo dell'ordinamento
-	    else direction = StringManager.getElement(sort, 1);
-	    
-	    if (direction == null || direction.isBlank()) direction = "asc";		//nel caso in cui fosse "", non sarebbe null, ma creerebbe problemi
+	    String direction = (parts.length >= 2 && !parts[1].isBlank())
+	            ? parts[1]
+	            : "asc";
 
-	    AllowedField field;
-	    try {
-	        field = AllowedField.from(rawField);
-	    } catch (IllegalArgumentException e) {
-	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-	    }
+	    AllowedField field = AllowedField.from(rawField);
 
 	    Sort s = direction.equalsIgnoreCase("desc")
 	            ? Sort.by(field.getProperty()).descending()
 	            : Sort.by(field.getProperty()).ascending();
 
-	    return database.findAll(s)			//trasformo issue in issue response, così che non debba passare campi sensibili come la password
+	    return database.findAll(s)
 	            .stream()
-	            .map(i -> new IssueResponse(
-	                    i.getId(),
-	                    i.getTitle(),
-	                    i.getDescription(),
-	                    i.getPriority(),
-	                    i.getState(),
-	                    i.getType(),
-	                    i.getPath(),
-	                    i.getCreatedAt(),
-	                    i.getUpdatedAt(),
-	                    i.getCreator().getId()
-	            )).toList();
+	            .map(IssueServices::toResponse)
+	            .toList();
 	}
 	
 	public Issue modifyIssue(Long id, ModifyRequest request) {
 		Issue issue = database.findById(id).orElseThrow(
 				()-> new EntityNotFoundException("Issue not found"));
 		
-		issue.setTitle(request.getTitle());
-		issue.setDescription(request.getDescription());
-		issue.setPriority(request.getPriority());
-		issue.setType(request.getType());
-		issue.setState(request.getState());
-		
+		applyChanges(issue, request);
 		return database.saveIssue(issue);
 	}
 	
-	@Transactional
 	public Issue uploadIssueImage(Long id, MultipartFile file) {
         Issue issue = database.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Issue " + id + " not found"));
 
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Empty file");
-        }
+        if (file == null || file.isEmpty())	throw new IllegalArgumentException("Empty file");
 
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("Upload an image file");
+        if (contentType == null || !contentType.startsWith("image/")) throw new IllegalArgumentException("Upload an image file");
+
+        String ext = guessExtension(contentType);
+        String filename = UUID.randomUUID() + ext;    
+        
+        Path issueDir = uploadRoot.resolve(String.valueOf(id));
+        Path destination = issueDir.resolve(filename).normalize();
+        
+        // sicurezza: il path deve restare dentro issueDir
+        if (!destination.startsWith(issueDir.normalize())) {
+            throw new IllegalArgumentException("Invalid file path");
         }
-
+            
+        String oldPath = issue.getPath(); 	//se il file
+        String publicPath = UriComponentsBuilder
+            .fromPath(publicBase)
+            .pathSegment(String.valueOf(id))
+            .pathSegment(filename)
+            .toUriString();
+        
         try {
-        	// 1) crea directory uploads/issues/id
-        	Path issueDir = uploadRoot.resolve(String.valueOf(id));
-        	Files.createDirectories(issueDir);
+            Files.createDirectories(issueDir);
 
-        	// 2) cancella vecchio file se esiste (1 immagine per issue)
-        	deleteOldImageIfPresent(issue);
+            // 1) salva nuovo file (prima)
+            try (InputStream in = file.getInputStream()) {
+                Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
+            }
 
-        	// 3) salva nuovo file
-        	String ext = guessExtension(contentType);
-        	String filename = UUID.randomUUID() + ext;
-        	Path destination = issueDir.resolve(filename).normalize();
+            // 2) aggiorna DB
+            issue.setPath(publicPath);
+            Issue saved = database.saveIssue(issue);
 
-        	try (InputStream in = file.getInputStream()) {
-        	    Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
-        	}
+            // 3) elimina vecchio file (dopo)
+            deleteOldImageIfPresent(oldPath);
 
-        	// 4) salva path "pubblico" nel DB (URL relativo)
-        	String publicPath = UriComponentsBuilder
-        	        .fromPath(publicBase)
-        	        .pathSegment(String.valueOf(id))
-        	        .pathSegment(filename)
-        	        .toUriString();
-
-        	issue.setPath(publicPath);
-
-            return database.saveIssue(issue);
+            return saved;
 
         } catch (IOException e) {
-        	throw new IllegalStateException("Unable to save issue image", e);
+            // se qualcosa va male dopo la scrittura, prova a pulire il file appena scritto
+            try { Files.deleteIfExists(destination); } catch (IOException ignored) {}
+            throw new IllegalStateException("Unable to save issue image", e);
         }
     }
+	  
+	public Resource getIssueImage(Long id) {
+	    Issue issue = database.findById(id)
+	            .orElseThrow(() -> new EntityNotFoundException("Issue not found"));
+
+	    String publicPath = issue.getPath();
+	    if (publicPath == null || publicPath.isBlank()) throw new EntityNotFoundException("No image for this issue");
+
+	    String prefix = UriComponentsBuilder.fromPath(publicBase).path("/").toUriString();
+	    if (!publicPath.startsWith(prefix)) throw new IllegalArgumentException("Invalid image path");
+
+	    String relative = publicPath.substring(prefix.length()); // es: "{id}/{file}"
+	    Path file = uploadRoot.resolve(relative).normalize();
+
+	    if (!file.startsWith(uploadRoot.normalize())) throw new IllegalArgumentException("Invalid image path");
+
+	    if (!Files.exists(file)) throw new EntityNotFoundException("Image file not found");
+
+	    try {
+	        return new UrlResource(file.toUri());
+	    } catch (Exception e) {
+	        throw new IllegalStateException("Cannot load image", e);
+	    }
+	}
+    
+
+    /*		-----		*/
+    /*		UTILS		*/
+    /*		-----		*/
+    
+    
+	public Issue toIssue(NewIssueRequest request, User creator) {
+	    Issue issue = new Issue();
+	    issue.setTitle(request.getTitle());
+	    issue.setDescription(request.getDescription());
+	    issue.setPriority(request.getPriority() != null ? request.getPriority() : Priority.MEDIUM);
+	    issue.setType(request.getType());
+	    issue.setState(State.TODO);
+	    issue.setCreator(creator);
+	    
+	    return issue;
+	}
 	
-	private void deleteOldImageIfPresent(Issue issue) throws IOException {
-	    String oldPath = issue.getPath();
+	private static IssueResponse toResponse(Issue i) {
+	    return new IssueResponse(
+	            i.getId(),
+	            i.getTitle(),
+	            i.getDescription(),
+	            i.getPriority(),
+	            i.getState(),
+	            i.getType(),
+	            i.getPath(),
+	            i.getCreatedAt(),
+	            i.getUpdatedAt(),
+	            i.getCreator().getId()
+	    );
+	}
+	
+	private void applyChanges(Issue issue, ModifyRequest request) {		//if camp are not passed, i don't want to set it null! (so != null)
+	    if (request.getTitle() != null) issue.setTitle(request.getTitle());
+	    if (request.getDescription() != null) issue.setDescription(request.getDescription());
+	    if (request.getPriority() != null) issue.setPriority(request.getPriority());
+	    if (request.getType() != null) issue.setType(request.getType());
+	    if (request.getState() != null) issue.setState(request.getState());
+	}
+	
+	private void deleteOldImageIfPresent(String oldPath) throws IOException {
 	    if (oldPath == null || oldPath.isBlank()) return;
 
-	    // se nel DB salvi "/images/issues/{id}/{file}"
-	    String prefix = UriComponentsBuilder
-	            .fromPath(publicBase)
-	            .path("/")
-	            .toUriString();
-
+	    String prefix = UriComponentsBuilder.fromPath(publicBase).path("/").toUriString();
 	    if (!oldPath.startsWith(prefix)) return;
 
-	    // trasforma URL relativo in path su disco:
 	    String relative = oldPath.substring(prefix.length());
 	    Path oldFile = uploadRoot.resolve(relative).normalize();
-
 	    Files.deleteIfExists(oldFile);
 	}
     
@@ -193,45 +215,4 @@ public class IssueServices implements IssueServicesInterface {
             default -> throw new IllegalArgumentException("Not supported");
         };
     }
-    
-    public ResponseEntity<Resource> getIssueImage(Long id) {
-
-        Issue issue = database.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Issue not found"));
-
-        if (issue.getPath() == null || issue.getPath().isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "No image for this issue");
-        }
-
-        try {
-            String relative = issue.getPath().replace("/images/issues/", "");
-
-            Path file = uploadRoot.resolve(relative).normalize();
-
-            if (!Files.exists(file)) {
-                throw new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Image file not found");
-            }
-
-            Resource resource = new UrlResource(file.toUri());
-
-            String contentType = Files.probeContentType(file);
-            MediaType mediaType = (contentType != null)
-                    ? MediaType.parseMediaType(contentType)
-                    : MediaType.APPLICATION_OCTET_STREAM;
-
-            return ResponseEntity.ok()
-                    .contentType(mediaType)
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .body(resource);
-
-        } catch (Exception e) {
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Cannot load image", e);
-        }
-    }
-
-
 }
