@@ -134,7 +134,7 @@ public class IssueServices implements IssueServicesInterface {
         }
 
         try {
-        	// 1) crea directory uploads/issues/{id}
+        	// 1) crea directory uploads/issues/id
         	Path issueDir = uploadRoot.resolve(String.valueOf(id));
         	Files.createDirectories(issueDir);
 
@@ -162,7 +162,7 @@ public class IssueServices implements IssueServicesInterface {
             return database.saveIssue(issue);
 
         } catch (IOException e) {
-            throw new RuntimeException("Error during image saving", e);
+        	throw new IllegalStateException("Unable to save issue image", e);
         }
     }
 	
@@ -179,7 +179,6 @@ public class IssueServices implements IssueServicesInterface {
 	    if (!oldPath.startsWith(prefix)) return;
 
 	    // trasforma URL relativo in path su disco:
-	    // /images/issues/3/x.jpg -> uploads/issues/3/x.jpg
 	    String relative = oldPath.substring(prefix.length());
 	    Path oldFile = uploadRoot.resolve(relative).normalize();
 

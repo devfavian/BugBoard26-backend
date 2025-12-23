@@ -10,17 +10,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 public class SecurityConfig {
-
+	
+	public static final String ADMINROLE = "ADMIN";
+	public static final String USERROLE = "USER";
+	
     @Bean
-    public SecurityFilterChain chain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
+    public SecurityFilterChain chain(HttpSecurity http, JwtFilter jwtFilter){
 
         http.csrf(csrf -> csrf.disable());
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/bugboard/login").permitAll()
-                .requestMatchers("/bugboard/admin/**").hasRole("ADMIN")
-                .requestMatchers("/bugboard/user/**").hasAnyRole("USER", "ADMIN")
-                .requestMatchers("/bugboard/issue/**").hasAnyRole("USER","ADMIN")
+                .requestMatchers("/bugboard/admin/**").hasRole(ADMINROLE)
+                .requestMatchers("/bugboard/user/**").hasAnyRole(USERROLE, ADMINROLE)
+                .requestMatchers("/bugboard/issue/**").hasAnyRole(USERROLE,ADMINROLE)
                 .anyRequest().authenticated()
         );
 
