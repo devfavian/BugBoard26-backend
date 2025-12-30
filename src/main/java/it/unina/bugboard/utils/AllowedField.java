@@ -16,7 +16,7 @@ public enum AllowedField {
         return property;
     }
 
-    // 🔥 converte input frontend → enum
+    // converte input frontend → enum
     public static AllowedField from(String value) {
         return switch (value.toLowerCase()) {
             case "priority" -> PRIORITY;
