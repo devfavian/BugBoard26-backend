@@ -178,7 +178,8 @@ public class IssueServices implements IssueServicesInterface {
 	            i.getPath(),
 	            i.getCreatedAt(),
 	            i.getUpdatedAt(),
-	            i.getCreator().getId()
+	            i.getCreator().getId(),
+	            i.getCreator().getEmail()
 	    );
 	}
 	

@@ -18,8 +18,9 @@ public class IssueResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long creatorId;
+    private String creatorEmail;
 
-    public IssueResponse(Long id, String title, String description, Priority priority, State state, Type type, String path, LocalDateTime createdAt, LocalDateTime updatedAt, Long creatorId) {
+    public IssueResponse(Long id, String title, String description, Priority priority, State state, Type type, String path, LocalDateTime createdAt, LocalDateTime updatedAt, Long creatorId, String creatorEmail) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -30,6 +31,7 @@ public class IssueResponse {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.creatorId = creatorId;
+        this.creatorEmail = creatorEmail;
     }
     
     public IssueResponse(Long id) {
@@ -52,4 +54,5 @@ public class IssueResponse {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public Long getCreatorId() { return creatorId; }
+    public String getCreatorEmail() { return creatorEmail; }
 }
